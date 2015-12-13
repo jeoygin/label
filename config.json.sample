@@ -1,0 +1,8 @@
+{
+  "test": {
+    "listfile": "/path/to/listfile",
+    "labelfile": "/path/to/labelfile",
+    "root": "/path/to/image/dir",
+    "labels": ["label1", "label2", "label3", "label4", "label5"]
+  }
+}

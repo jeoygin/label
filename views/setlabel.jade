@@ -1,0 +1,18 @@
+doctype html
+html
+  head
+    title= title
+    script(type="text/javascript").
+      function submitForm(label) {
+        document.getElementById("label").value=label;
+        document.getElementById("form").submit();
+      }
+  body
+    h1= title
+    div
+      img(width="140", height="140", src="#{url}")
+      form(id="form", name="setLabel", action="#{action}", method="post")
+        input(type="hidden", name="label", id="label")
+        each val, index in labels
+          input(type="button", value="#{val}", onclick='submitForm("#{index}")')
+
