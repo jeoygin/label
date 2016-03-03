@@ -101,8 +101,8 @@ router.get('/:set/:id', function(req, res, next) {
     let name = db[set]['list'][id];
     res.render('setlabel', {
       title: name,
-      url: `/${set}/image/${id+1}`,
-      action: `/${set}/${id+1}`,
+      url: `/class/${set}/image/${id+1}`,
+      action: `/class/${set}/${id+1}`,
       labels: db.config[set]['labels']
     });
   }
@@ -124,7 +124,7 @@ router.post('/:set/:id', function(req, res, next) {
         console.log(err);
       }
     });
-    res.redirect(`/${set}/${id+2}`);
+    res.redirect(`/class/${set}/${id+2}`);
   }
 });
 router.get('/:set/image/:id', getImage);
