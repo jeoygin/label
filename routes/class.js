@@ -4,12 +4,17 @@ var fs = require('fs');
 var router = express.Router();
 var db = require('../db');
 
+var getSetKey = function(set) {
+  return 'class/' + set;
+};
+
 var loadData = function(set) {
-  if (db.config[set] && !db[set]) {
-    db[set] = {};
-    let root = db.config[set]['root'];
-    let listfile = db.config[set]['listfile'];
-    let labelfile = db.config[set]['labelfile'];
+  let setKey = getSetKey(set);
+  if (db.config[setKey] && !db[setKey]) {
+    db[setKey] = {};
+    let root = db.config[setKey]['root'];
+    let listfile = db.config[setKey]['listfile'];
+    let labelfile = db.config[setKey]['labelfile'];
 
     let list = [];
     fs.readFileSync(listfile, 'utf8').split("\n").forEach(function(line) {
@@ -17,29 +22,30 @@ var loadData = function(set) {
         list.push(line);
       }
     });
-    db[set]['list'] = list;
+    db[setKey]['list'] = list;
 
-    db[set]['label'] = {};
+    db[setKey]['label'] = {};
     fs.readFileSync(labelfile, 'utf8').split("\n").forEach(function(line) {
       let parts = line.split(" ");
-      db[set]['label'][parts[0]] = parts[1];
+      db[setKey]['label'][parts[0]] = parts[1];
     });
   }
 };
 
 var getImage = function(req, res, next) {
   let set = req.params.set;
+  let setKey = getSetKey(set);
   let id = Number.parseInt(req.params.id, 10) - 1;
-  if (db.config[set] === undefined) {
+  if (db.config[setKey] === undefined) {
     res.sendStatus(404);
   } else {
     loadData(set);
-    if (Number.isNaN(id) || id < 0 || id >= db[set]['list'].length) {
+    if (Number.isNaN(id) || id < 0 || id >= db[setKey]['list'].length) {
       res.sendStatus(404);
     }
 
     var options = {
-      root: db.config[set]['root'],
+      root: db.config[setKey]['root'],
       dotfiles: 'deny',
       headers: {
         'x-timestamp': Date.now(),
@@ -47,12 +53,12 @@ var getImage = function(req, res, next) {
       }
     };
 
-    res.sendFile(db[set].list[id], options, function (err) {
+    res.sendFile(db[setKey].list[id], options, function (err) {
       if (err) {
         console.log(err);
         res.status(err.status).end();
       } else {
-        console.log('Sent: ', db[set].list[id]);
+        console.log('Sent: ', db[setKey].list[id]);
       }
     });
   }
@@ -60,11 +66,12 @@ var getImage = function(req, res, next) {
 
 var getLabel = function(req, res, next) {
   let set = req.params.set;
-  if (db.config[set] === undefined) {
+  let setKey = getSetKey(set);
+  if (db.config[setKey] === undefined) {
     res.sendStatus(404);
   } else {
     res.send({
-      label: db.config[set]['label']
+      label: db.config[setKey]['label']
     });
   }
 };
@@ -76,13 +83,14 @@ router.get('/', function(req, res, next) {
 
 router.get('/:set', function(req, res, next) {
   let set = req.params.set;
-  if (db.config[set] === undefined) {
+  let setKey = getSetKey(set);
+  if (db.config[setKey] === undefined) {
     res.sendStatus(404);
   } else {
     loadData(set);
     let list = [];
-    db[set]['list'].forEach(function (e) {
-      list.push(`${e} ${db[set]['label'][e]}`);
+    db[setKey]['list'].forEach(function (e) {
+      list.push(`${e} ${db[setKey]['label'][e]}`);
     });
     res.render('label', { title: set, list: list });
   }
@@ -90,36 +98,38 @@ router.get('/:set', function(req, res, next) {
 
 router.get('/:set/:id', function(req, res, next) {
   let set = req.params.set;
+  let setKey = getSetKey(set);
   let id = Number.parseInt(req.params.id, 10) - 1;
-  if (db.config[set] === undefined) {
+  if (db.config[setKey] === undefined) {
     res.sendStatus(404);
   } else {
     loadData(set);
-    if (Number.isNaN(id) || id < 0 || id >= db[set]['list'].length) {
+    if (Number.isNaN(id) || id < 0 || id >= db[setKey]['list'].length) {
       res.sendStatus(404);
     }
-    let name = db[set]['list'][id];
+    let name = db[setKey]['list'][id];
     res.render('setlabel', {
       title: name,
       url: `/class/${set}/image/${id+1}`,
       action: `/class/${set}/${id+1}`,
-      labels: db.config[set]['labels']
+      labels: db.config[setKey]['labels']
     });
   }
 });
 router.post('/:set/:id', function(req, res, next) {
   let set = req.params.set;
+  let setKey = getSetKey(set);
   let id = Number.parseInt(req.params.id, 10) - 1;
-  if (db.config[set] === undefined) {
+  if (db.config[setKey] === undefined) {
     res.sendStatus(404);
   } else {
     loadData(set);
-    if (Number.isNaN(id) || id < 0 || id >= db[set]['list'].length) {
+    if (Number.isNaN(id) || id < 0 || id >= db[setKey]['list'].length) {
       res.sendStatus(404);
     }
-    let name = db[set]['list'][id];
-    db[set]['label'][name] = req.body.label;
-    fs.appendFile(db.config[set]['labelfile'], `${name} ${req.body.label}\n`, function (err) {
+    let name = db[setKey]['list'][id];
+    db[setKey]['label'][name] = req.body.label;
+    fs.appendFile(db.config[setKey]['labelfile'], `${name} ${req.body.label}\n`, function (err) {
       if (err) {
         console.log(err);
       }

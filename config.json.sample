@@ -1,5 +1,5 @@
 {
-  "test": {
+  "class/test": {
     "listfile": "/path/to/listfile",
     "labelfile": "/path/to/labelfile",
     "root": "/path/to/image/dir",
