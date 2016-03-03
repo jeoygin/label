@@ -4,5 +4,10 @@
     "labelfile": "/path/to/labelfile",
     "root": "/path/to/image/dir",
     "labels": ["label1", "label2", "label3", "label4", "label5"]
+  },
+  "box/xxx": {
+    "listfile": "/path/to/listfile",
+    "imgdir": "/path/to/image/dir",
+    "boxdir": "/path/to/box/dir"
   }
 }
