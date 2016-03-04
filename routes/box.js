@@ -192,6 +192,7 @@ var showBox = function(req, res, next) {
     let name = data['list'][id];
     res.render('showbox', {
       title: name,
+      id: id + 1,
       img: `${pathPrefix}/${set}/image/${id+1}`,
       boxapi: `${pathPrefix}/${set}/api/boxes/${id+1}`
     });

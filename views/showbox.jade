@@ -5,6 +5,12 @@ html
   body(onkeydown='onKeyDown(event)', onkeyup='onKeyUp(event)', onkeypress='onKeyPress(event)')
     h1= title
     div
+      a(href='javascript: previousImage();')
+        | &nbsp;<<&nbsp;
+      | &nbsp;&nbsp;&nbsp;&nbsp;
+      a(href='javascript: nextImage();')
+        | &nbsp;>>&nbsp;
+    div
       canvas(id="imageCanvas")
       img(id="image")
     script(type='text/javascript', src='http://code.jquery.com/jquery-2.1.4.min.js')
@@ -12,5 +18,6 @@ html
     script(type="text/javascript").
       var boxapi = "#{boxapi}";
       var imgurl = "#{img}";
+      var id = #{id};
       loadImage();
 
