@@ -1,5 +1,7 @@
 var oriImage;
 
+var KEY_CTRL = 17;
+
 var Point = function(x, y) {
   this.x = x;
   this.y = y;
@@ -49,7 +51,8 @@ var config = {
   unitSize: 5,
   borderMask: 0,
   showBorderMask: 0,
-  boxes: []
+  boxes: [],
+  metakey: false
 };
 
 var getCanvas = function() {
@@ -95,6 +98,13 @@ var drawRect = function(ctx, x, y, width, height, color, linewidth) {
   ctx.strokeStyle = color;
   ctx.rect(x, y, width, height);
   ctx.stroke();
+};
+
+var drawText = function(ctx, message, x, y, font, align, color) {
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.fillText(message, x, y);
 };
 
 var displayImage = function(canvas, message) {
@@ -145,10 +155,7 @@ var displayImage = function(canvas, message) {
   }
 
   if (message) {
-    context.font = '16pt Calibri';
-    context.fillStyle = '#FF0000';
-    context.textAlign = "right";
-    context.fillText(message, canvas.width - 10, 20);
+    drawText(context, message, canvas.width - 10, 20, '16pt Calibri', 'right', '#FF0000');
   }
 };
 
@@ -181,7 +188,7 @@ var calcBorder = function(x, y, box) {
     }
   }
   return borderMask;
-}
+};
 
 var remove = function() {
   if (config.selectedBox) {
@@ -193,7 +200,48 @@ var remove = function() {
       }
     }
   }
-}
+};
+
+var changeUnitSize = function(value) {
+  if (!config.imageLoaded) {
+    return;
+  }
+  var canvas = getCanvas();
+  config.unitSize = Math.max(1, config.unitSize + value);
+  displayImage(getCanvas(), config.unitSize);
+};
+
+var move = function(x, y) {
+  if (!config.imageLoaded) {
+    return;
+  }
+  var box = config.selectedBox;
+  if (box && box.rect.width > 0 && box.rect.height > 0) {
+    box.rect.x = Math.min(Math.max(0, box.rect.x + config.unitSize * x),
+                          oriImage.width - box.rect.width);
+    box.rect.y = Math.min(Math.max(0, box.rect.y + config.unitSize * y),
+                          oriImage.height - box.rect.height);
+    displayImage(getCanvas());
+  }
+};
+
+var changeSize = function(x, y) {
+  if (!config.imageLoaded) {
+    return;
+  }
+  var box = config.selectedBox;
+  if (box && box.rect.width > 0 && box.rect.height > 0) {
+    if (box.rect.width + x * config.unitSize > 0) {
+      box.rect.width = Math.min(box.rect.width + x * config.unitSize,
+                                oriImage.width - box.rect.x);
+    }
+    if (box.rect.height + y * config.unitSize > 0) {
+      box.rect.height = Math.min(box.rect.height + y * config.unitSize,
+                                 oriImage.height - box.rect.y);
+    }
+    displayImage(getCanvas());
+  }
+};
 
 var onMouseDown = function(event) {
   if (!config.imageLoaded) {
@@ -300,4 +348,62 @@ var onMouseMove = function(event) {
   config.showBorderMask = calcBorder(x, y, config.selectedBox);
 
   displayImage(canvas, '(' + x + ',' + y + ')');
+};
+
+var onKeyPress = function(event) {
+  var key = event.keyCode || event.which;
+  var keychar = String.fromCharCode(key);
+  switch (keychar) {
+  case '+':
+    changeUnitSize(1);
+    break;
+  case '-':
+    changeUnitSize(-1);
+    break;
+  case 'I':
+  case 'i':
+    move(0, -1);
+    break;
+  case 'K':
+  case 'k':
+    move(0, 1);
+    break;
+  case 'J':
+  case 'j':
+    move(-1, 0);
+    break;
+  case 'L':
+  case 'l':
+    move(1, 0);
+    break;
+  case '>':
+    changeSize(1, 0);
+    break;
+  case '<':
+    changeSize(-1, 0);
+    break;
+  case '^':
+    changeSize(0, 1);
+    break;
+  case '_':
+    changeSize(0, -1);
+    break;
+  default:
+  }
+};
+
+var onKeyDown = function(event) {
+  var key = event.keyCode || event.which;
+
+  if (key == KEY_CTRL) {
+    config.metakey = true;
+  }
+};
+
+var onKeyUp = function(event) {
+  var key = event.keyCode || event.which;
+
+  if (key == KEY_CTRL) {
+    config.metakey = false;
+  }
 };

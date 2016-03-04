@@ -2,7 +2,7 @@ doctype html
 html
   head
     title= title
-  body
+  body(onkeydown='onKeyDown(event)', onkeyup='onKeyUp(event)', onkeypress='onKeyPress(event)')
     h1= title
     div
       canvas(id="imageCanvas")
