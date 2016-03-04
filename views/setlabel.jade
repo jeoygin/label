@@ -7,8 +7,10 @@ html
         document.getElementById("label").value=label;
         document.getElementById("form").submit();
       }
+    link(rel='stylesheet', href='/stylesheets/label.css')
   body
-    h1= title
+    div(style="height: 50px")
+      h1= title
     div
       img(width="140", height="140", src="#{url}")
       form(id="form", name="setLabel", action="#{action}", method="post")
