@@ -5,7 +5,7 @@ var path = require('path');
 var router = express.Router();
 var db = require('../db');
 
-var pathPrefix = '/box'
+var pathPrefix = '/box';
 
 var getSetKey = function(set) {
   return 'box/' + set;

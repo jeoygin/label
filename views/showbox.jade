@@ -2,11 +2,15 @@ doctype html
 html
   head
     title= title
-    script(type="text/javascript").
-      var boxapi = "#{boxapi}";
-      var imgurl = "#{img}";
   body
     h1= title
     div
-      img(src="#{img}")
+      canvas(id="imageCanvas")
+      img(id="image")
+    script(type='text/javascript', src='http://code.jquery.com/jquery-2.1.4.min.js')
+    script(type='text/javascript', src='/javascripts/box.js')
+    script(type="text/javascript").
+      var boxapi = "#{boxapi}";
+      var imgurl = "#{img}";
+      loadImage();
 
