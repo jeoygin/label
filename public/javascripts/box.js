@@ -36,6 +36,10 @@ Rect.prototype.copyFrom = function(rect) {
   this.height = rect.height;
 };
 
+Rect.prototype.toArray = function() {
+  return [this.x, this.y, this.width, this.height];
+};
+
 var Box = function(rect) {
   this.rect = new Rect(rect.x, rect.y, rect.width, rect.height);
 };
@@ -67,8 +71,16 @@ var loadImage = function() {
     var canvas = getCanvas();
     if (canvas) {
       config.imageLoaded = true;
-      initCanvas(canvas, oriImage.width, oriImage.height);
-      displayImage(canvas);
+      loadBox(function(result) {
+        var boxes = [];
+        for (var i = 0; i < result.boxes.length; i++) {
+          var b = result.boxes[i];
+          boxes.push(new Box(new Rect(b[0], b[1], b[2], b[3])));
+        }
+        config.boxes = boxes;
+        initCanvas(canvas, oriImage.width, oriImage.height);
+        displayImage(canvas);
+      });
     }
   }
   oriImage.src = imgurl;
@@ -243,6 +255,51 @@ var changeSize = function(x, y) {
   }
 };
 
+var loadBox = function(callback) {
+  $.get(boxapi)
+    .done(function(result) {
+      callback && callback(result);
+    })
+    .fail(function(err){
+      console.log(JSON.stringify(err));
+      alert('加载失败')
+    });
+};
+
+var saveBox = function(callback) {
+  var boxes = [];
+  for (var i = 0; i < config.boxes.length; i++) {
+    boxes.push(config.boxes[i].rect.toArray());
+  }
+  var req = {};
+  req.boxes = boxes;
+  console.log(JSON.stringify(req));
+
+  $.ajaxSetup({
+    contentType: "application/json; charset=utf-8"
+  });
+  $.post(boxapi, JSON.stringify(req))
+    .done(function(result) {
+      callback && callback();
+    })
+    .fail(function(err) {
+      console.log(JSON.stringify(err));
+      alert('保存失败');
+    });
+};
+
+var previousImage = function() {
+  saveBox(function() {
+    window.location.href='' + (id - 1);
+  });
+};
+
+var nextImage = function() {
+  saveBox(function() {
+    window.location.href='' + (id + 1);
+  });
+};
+
 var onMouseDown = function(event) {
   if (!config.imageLoaded) {
     return;
@@ -389,6 +446,11 @@ var onKeyPress = function(event) {
     changeSize(0, -1);
     break;
   default:
+  }
+  switch (key) {
+  case 19: // CTRL-s
+    saveBox();
+    break;
   }
 };
 
