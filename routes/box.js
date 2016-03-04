@@ -5,6 +5,8 @@ var path = require('path');
 var router = express.Router();
 var db = require('../db');
 
+var pathPrefix = '/box'
+
 var getSetKey = function(set) {
   return 'box/' + set;
 };
@@ -16,6 +18,16 @@ var loadData = function(set) {
     let listfile = db.config[setKey]['listfile'];
     let imgdir = db.config[setKey]['imgdir'];
     let boxdir = db.config[setKey]['boxdir'];
+
+    if (!fs.existsSync(listfile)) {
+      console.log('[loadData] No such file ' + listfile)
+      return;
+    }
+
+    if (!fs.existsSync(boxdir)) {
+      console.info('[loadData] Create directory ' + boxdir);
+      fs.mkdirSync(boxdir);
+    }
 
     let list = [];
     fs.readFileSync(listfile, 'utf8').split("\n").forEach(function(line) {
@@ -32,11 +44,15 @@ var getImage = function(req, res, next) {
   let set = req.params.set;
   let setKey = getSetKey(set);
   let id = Number.parseInt(req.params.id, 10) - 1;
-  if (db.config[setKey] === undefined) {
+  if (db.config[setKey] === undefined || Number.isNaN(id) || id < 0) {
     res.sendStatus(404);
   } else {
     loadData(set);
-    if (Number.isNaN(id) || id < 0 || id >= db[setKey]['list'].length) {
+    if (!db[setKey]) {
+      res.sendStatus(500, 'No data');
+      return;
+    }
+    if (id >= db[setKey]['list'].length) {
       res.sendStatus(404);
       return;
     }
@@ -71,6 +87,10 @@ var getBox = function(req, res, next) {
   } else {
     loadData(set);
     let data = db[setKey];
+    if (!data) {
+      res.sendStatus(500, 'No data');
+      return;
+    }
     if (id >= data['list'].length) {
       res.sendStatus(404);
       return;
@@ -107,6 +127,10 @@ var saveBox = function(req, res, next) {
   } else {
     loadData(set);
     let data = db[setKey];
+    if (!data) {
+      res.sendStatus(500, 'No data');
+      return;
+    }
     if (id >= data['list'].length) {
       res.sendStatus(404);
       return;
@@ -131,6 +155,51 @@ var saveBox = function(req, res, next) {
   }
 };
 
+var showList = function(req, res, next) {
+  let set = req.params.set;
+  let setKey = getSetKey(set);
+  if (db.config[setKey] === undefined) {
+    res.sendStatus(404);
+  } else {
+    loadData(set);
+    if (!db[setKey]) {
+      res.sendStatus(500, 'No data');
+      return;
+    }
+    let list = db[setKey]['list'].map((e, i) => {
+      return {name: e, url: `${pathPrefix}/${set}/${i+1}`}
+    });
+    res.render('box', { title: set, list: list });
+  }
+};
+
+var showBox = function(req, res, next) {
+  let set = req.params.set;
+  let setKey = getSetKey(set);
+  let id = Number.parseInt(req.params.id, 10) - 1;
+  if (db.config[setKey] === undefined || Number.isNaN(id) || id < 0) {
+    res.sendStatus(404);
+  } else {
+    loadData(set);
+    let data = db[setKey];
+    if (!data) {
+      res.sendStatus(500, 'No data');
+      return;
+    } else if (id >= data['list'].length) {
+      res.sendStatus(404);
+      return;
+    }
+    let name = data['list'][id];
+    res.render('showbox', {
+      title: name,
+      img: `${pathPrefix}/${set}/image/${id+1}`,
+      boxapi: `${pathPrefix}/${set}/api/boxes/${id+1}`
+    });
+  }
+};
+
+router.get('/:set', showList);
+router.get('/:set/:id', showBox);
 router.get('/:set/image/:id', getImage);
 router.get('/:set/api/boxes/:id', getBox);
 router.post('/:set/api/boxes/:id', saveBox);
