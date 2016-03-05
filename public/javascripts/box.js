@@ -93,6 +93,7 @@ var initCanvas = function(canvas, width, height) {
   canvas.addEventListener('mousemove', onMouseMove, false);
   canvas.addEventListener('mousedown', onMouseDown, false);
   canvas.addEventListener('mouseup', onMouseUp, false);
+  canvas.addEventListener('mouseout', onMouseOut, false);
 };
 
 var drawLine = function(ctx, pt1, pt2, color, width) {
@@ -366,6 +367,10 @@ var onMouseUp = function(event) {
   displayImage(canvas, '(' + x + ',' + y + ')');
 };
 
+var onMouseOut = function(event) {
+  onMouseUp(event);
+};
+
 var onMouseMove = function(event) {
   if (!config.imageLoaded) {
     return;
@@ -398,6 +403,8 @@ var onMouseMove = function(event) {
       config.selectedBox.rect.y = Math.min(y0, y1);
       config.selectedBox.rect.width = Math.abs(x1 - x0) + 1;
       config.selectedBox.rect.height = Math.abs(y1 - y0) + 1;
+      config.selectedBox.rect.x = Math.min(Math.max(0, config.selectedBox.rect.x), canvas.width - config.selectedBox.rect.width);
+      config.selectedBox.rect.y = Math.min(Math.max(0, config.selectedBox.rect.y), canvas.height - config.selectedBox.rect.height);
     }
   } else {
     config.borderMask = calcBorder(x, y, config.selectedBox);
@@ -449,7 +456,9 @@ var onKeyPress = function(event) {
   }
   switch (key) {
   case 19: // CTRL-s
-    saveBox();
+    saveBox(function() {
+      alert('保存成功');
+    });
     break;
   }
 };
