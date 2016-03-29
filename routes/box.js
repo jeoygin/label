@@ -165,7 +165,8 @@ var saveBox = function(req, res, next) {
     if (Array.isArray(boxes)) {
       for (let i = 0; i < boxes.length; i++) {
         let rect = boxes[i].rect;
-        if (!rect || !rect.x || !rect.y || !rect.width || !rect.height) {
+        if (!rect || !Number.isInteger(rect.x) || !Number.isInteger(rect.y)
+            || !Number.isInteger(rect.width) || !Number.isInteger(rect.height)) {
           res.sendStatus(403);
           return;
         }
