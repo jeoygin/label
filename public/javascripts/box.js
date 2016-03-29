@@ -40,8 +40,9 @@ Rect.prototype.toArray = function() {
   return [this.x, this.y, this.width, this.height];
 };
 
-var Box = function(rect) {
+var Box = function(rect, content) {
   this.rect = new Rect(rect.x, rect.y, rect.width, rect.height);
+  this.content = content;
 };
 
 var config = {
@@ -75,7 +76,9 @@ var loadImage = function() {
         var boxes = [];
         for (var i = 0; i < result.boxes.length; i++) {
           var b = result.boxes[i];
-          boxes.push(new Box(new Rect(b[0], b[1], b[2], b[3])));
+          boxes.push(new Box(new Rect(b.rect.x, b.rect.y,
+                                      b.rect.width, b.rect.height),
+                             b.content));
         }
         config.boxes = boxes;
         initCanvas(canvas, oriImage.width, oriImage.height);
@@ -128,13 +131,16 @@ var displayImage = function(canvas, message) {
   for (var i = 0; i < config.boxes.length; i++) {
     var box = config.boxes[i];
     if (box.rect.width > 0 && box.rect.height > 0) {
-      var color = '#00FF00'
+      var color = '#00FF00';
+      var linewidth = '1';
       if (box === config.selectedBox) {
         color = '#FF0000';
+      } else if (box.content) {
+        color = '#FFFF00';
       }
       drawRect(context, box.rect.x, box.rect.y,
                box.rect.width, box.rect.height,
-               color, '1');
+               color, linewidth);
     }
   }
 
@@ -212,8 +218,19 @@ var remove = function() {
         break;
       }
     }
+    displayImage(getCanvas());
   }
 };
+
+var editContent = function() {
+  if (config.selectedBox) {
+    var content = prompt('Formula Content', config.selectedBox.content || '');
+    if (content) {
+      config.selectedBox.content = content;
+      displayImage(getCanvas());
+    }
+  }
+}
 
 var changeUnitSize = function(value) {
   if (!config.imageLoaded) {
@@ -270,7 +287,10 @@ var loadBox = function(callback) {
 var saveBox = function(callback) {
   var boxes = [];
   for (var i = 0; i < config.boxes.length; i++) {
-    boxes.push(config.boxes[i].rect.toArray());
+    boxes.push({
+      rect: config.boxes[i].rect,
+      content: config.boxes[i].content
+    });
   }
   var req = {};
   req.boxes = boxes;
@@ -325,7 +345,6 @@ var onMouseDown = function(event) {
         break;
       }
     }
-    console.log(config.selectedBox);
   }
 
   if (!config.selectedBox) {
@@ -349,7 +368,6 @@ var onMouseUp = function(event) {
   if (!config.imageLoaded) {
     return;
   }
-  console.log(config.boxes);
   var canvas = getCanvas();
   var mousePos = getMousePos(canvas, event);
   var x = mousePos.x, y = mousePos.y;
@@ -455,6 +473,18 @@ var onKeyPress = function(event) {
   default:
   }
   switch (key) {
+  case 4: // CTRL-d
+    remove();
+    break;
+  case 5: // CTRL-e
+    editContent();
+    break;
+  case 14: // CTRL-n
+    nextImage();
+    break;
+  case 16: // CTRL-p
+    previousImage();
+    break;
   case 19: // CTRL-s
     saveBox(function() {
       alert('保存成功');

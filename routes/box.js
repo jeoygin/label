@@ -7,6 +7,13 @@ var db = require('../db');
 
 var pathPrefix = '/box';
 
+var Rect = function(x, y, w, h) {
+  this.x = x;
+  this.y = y;
+  this.width = w;
+  this.height = h;
+};
+
 var getSetKey = function(set) {
   return 'box/' + set;
 };
@@ -104,7 +111,25 @@ var getBox = function(req, res, next) {
         let boxes = [];
         fs.readFileSync(boxfile, 'utf8').split("\n").forEach(function(line) {
           if (line.trim().length > 0) {
-            boxes.push(line.split(/\s/).map(e => Number.parseInt(e)));
+            let parts = line.split(/\t/);
+            let error = parts.length < 4;
+            for (let i = 0; i < 4 && !error; i++) {
+              parts[i] = Number.parseInt(parts[i]);
+              if (Number.isNaN(parts[i])) {
+                error = true;
+              }
+            }
+            if (error) {
+              console.log(line + ' => ERROR');
+            } else {
+              let box = {};
+              box.rect = new Rect(parts[0], parts[1], parts[2], parts[3]);
+              box.content = '';
+              if (parts.length > 4) {
+                box.content = parts[4];
+              }
+              boxes.push(box);
+            }
           }
         });
         data['box'][name] = boxes;
@@ -138,15 +163,21 @@ var saveBox = function(req, res, next) {
     let name = data['list'][id];
     let boxes = req.body.boxes;
     if (Array.isArray(boxes)) {
-      data['box'][name] = boxes;
-      let boxfile = path.join(config['boxdir'], name + '.box');
       for (let i = 0; i < boxes.length; i++) {
-        if (!Array.isArray(boxes[i]) || boxes[i].length != 4) {
+        let rect = boxes[i].rect;
+        if (!rect || !rect.x || !rect.y || !rect.width || !rect.height) {
           res.sendStatus(403);
           return;
         }
+        if (!boxes[i].content) {
+          boxes[i].content = '';
+        }
       }
-      let content = boxes.map(arr => arr.join("\t")).join("\n");
+      data['box'][name] = boxes;
+      let boxfile = path.join(config['boxdir'], name + '.box');
+      let content = boxes
+          .map(box => `${box.rect.x}\t${box.rect.y}\t${box.rect.width}\t${box.rect.height}\t${box.content}`)
+          .join("\n");
       fs.writeFileSync(boxfile, content, 'utf8');
       res.sendStatus(200);
     } else {
