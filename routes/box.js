@@ -174,12 +174,15 @@ var saveBox = function(req, res, next) {
           boxes[i].content = '';
         }
       }
-      data['box'][name] = boxes;
-      let boxfile = path.join(config['boxdir'], name + '.box');
-      let content = boxes
-          .map(box => `${box.rect.x}\t${box.rect.y}\t${box.rect.width}\t${box.rect.height}\t${box.content}`)
-          .join("\n");
-      fs.writeFileSync(boxfile, content, 'utf8');
+      if (boxes.length > 0 || !data['box'][name]
+          || data['box'][name].length == 0) {
+        data['box'][name] = boxes;
+        let boxfile = path.join(config['boxdir'], name + '.box');
+        let content = boxes
+            .map(box => `${box.rect.x}\t${box.rect.y}\t${box.rect.width}\t${box.rect.height}\t${box.content}`)
+            .join("\n");
+        fs.writeFileSync(boxfile, content, 'utf8');
+      }
       res.sendStatus(200);
     } else {
       res.sendStatus(403);
