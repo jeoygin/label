@@ -294,7 +294,6 @@ var saveBox = function(callback) {
   }
   var req = {};
   req.boxes = boxes;
-  console.log(JSON.stringify(req));
 
   $.ajaxSetup({
     contentType: "application/json; charset=utf-8"
@@ -442,6 +441,14 @@ var onKeyPress = function(event) {
   case '-':
     changeUnitSize(-1);
     break;
+  case 'D':
+  case 'd':
+    remove();
+    break;
+  case 'E':
+  case 'e':
+    editContent();
+    break;
   case 'I':
   case 'i':
     move(0, -1);
@@ -457,6 +464,20 @@ var onKeyPress = function(event) {
   case 'L':
   case 'l':
     move(1, 0);
+    break;
+  case 'N':
+  case 'n':
+    nextImage();
+    break;
+  case 'P':
+  case 'p':
+    previousImage();
+    break;
+  case 'S':
+  case 's':
+    saveBox(function() {
+      alert('保存成功');
+    });
     break;
   case '>':
     changeSize(1, 0);
